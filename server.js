@@ -1,6 +1,6 @@
 const express = require("express");
 const Fuse = require("fuse.js");
-const { getAllPages } = require("./db");
+const fs = require("fs");
 
 const app = express();
 const PORT = 9992;
@@ -9,12 +9,15 @@ app.use(express.static("public"));
 app.use(express.json());
 
 let fuse;
-
-getAllPages(pages => {
-  fuse = new Fuse(pages, {
-    keys: ["title", "text"],
-    threshold: 0.3
-  });
+let pages = [];
+try {
+  pages = JSON.parse(fs.readFileSync("./output/search.db", "utf-8"));
+} catch (e) {
+  console.warn("Could not read ./output/search.db, starting with empty DB.");
+}
+fuse = new Fuse(pages, {
+  keys: ["title", "text"],
+  threshold: 0.3
 });
 
 app.get("/search", (req, res) => {
